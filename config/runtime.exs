@@ -20,6 +20,10 @@ if System.get_env("PHX_SERVER") do
   config :rent_ready, RentReadyWeb.Endpoint, server: true
 end
 
+config :rent_ready, GoCardless,
+  secret_id: System.get_env("GO_CARDLESS_SECRET_ID"),
+  secret_key: System.get_env("GO_CARDLESS_SECRET_KEY")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
