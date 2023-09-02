@@ -36,14 +36,14 @@ defmodule GoCardless.HttpClient do
 
     with {:ok, response} <- Tesla.post(client, "/token/new", request_body),
          %Env{status: 200, body: response_body} <- response do
-      AccessTokenContainer.new(response_body)
+      {:ok, AccessTokenContainer.new(response_body)}
     end
   end
 
   def get_institutions(client) do
     with {:ok, response} <- Tesla.get(client, "/institutions/", query: [country: @country]),
          %Env{status: 200, body: response_body} <- response do
-      Enum.map(response_body, &Institution.new/1)
+      {:ok, Enum.map(response_body, &Institution.new/1)}
     end
   end
 
@@ -56,7 +56,7 @@ defmodule GoCardless.HttpClient do
 
     with {:ok, response} <- Tesla.post(client, "/agreements/enduser/", request_body),
          %Env{status: 200, body: response_body} <- response do
-      EndUserAgreement.new(response_body)
+      {:ok, EndUserAgreement.new(response_body)}
     end
   end
 
@@ -71,28 +71,28 @@ defmodule GoCardless.HttpClient do
 
     with {:ok, response} <- Tesla.post(client, "/requisitions/", request_body),
          %Env{status: 200, body: response_body} <- response do
-      Requisition.new(response_body)
+      {:ok, Requisition.new(response_body)}
     end
   end
 
   def get_requisition(client, requisition_id) do
     with {:ok, response} <- Tesla.get(client, "/requisitions/#{requisition_id}"),
          %Env{status: 200, body: response_body} <- response do
-      Requisition.new(response_body)
+      {:ok, Requisition.new(response_body)}
     end
   end
 
   def get_account_details(client, account_id) do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/details/"),
          %Env{status: 200, body: response_body} <- response do
-      Account.new(response_body)
+      {:ok, Account.new(response_body)}
     end
   end
 
   def get_account_transactions(client, account_id) do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/transactions/"),
          %Env{status: 200, body: response_body} <- response do
-      Enum.map(response_body, &Transaction.new/1)
+      {:ok, Enum.map(response_body, &Transaction.new/1)}
     end
   end
 
