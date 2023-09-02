@@ -26,6 +26,8 @@ defmodule GoCardless.HttpClient do
       @middleware
       |> append_if(opts[:access_token], {Tesla.Middleware.BearerAuth, token: opts[:access_token]})
 
+    middleware = middleware ++ Keyword.get(opts, :middleware, [])
+
     Tesla.client(middleware)
   end
 
