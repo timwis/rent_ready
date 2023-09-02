@@ -5,6 +5,7 @@ defmodule GoCardless.HttpClient do
   alias GoCardless.{
     AccessTokenContainer,
     Account,
+    Balance,
     EndUserAgreement,
     Institution,
     Requisition,
@@ -93,6 +94,14 @@ defmodule GoCardless.HttpClient do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/transactions/"),
          %Env{status: 200, body: response_body} <- response do
       {:ok, Enum.map(response_body, &Transaction.new/1)}
+    end
+  end
+
+  def get_balances(client, account_id) do
+    with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/transactions/"),
+         %Env{status: 200, body: response_body} <- response,
+         %{"balances" => balances} <- response_body do
+      {:ok, Enum.map(balances, &Balance.new/1)}
     end
   end
 
