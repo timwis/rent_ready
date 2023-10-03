@@ -1,4 +1,4 @@
-defmodule GoCardless.EndUserAgreement do
+defmodule GoCardless.EndUserAgreementResponse do
   use Ecto.Schema
   import Ecto.Changeset
 

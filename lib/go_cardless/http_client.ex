@@ -1,15 +1,14 @@
 defmodule GoCardless.HttpClient do
-  alias GoCardless.EndUserAgreement
   alias Tesla.Env
 
   alias GoCardless.{
     AccessTokenContainer,
-    Account,
-    Balance,
-    EndUserAgreement,
-    Institution,
-    Requisition,
-    Transaction
+    AccountResponse,
+    BalanceResponse,
+    EndUserAgreementResponse,
+    InstitutionResponse,
+    RequisitionResponse,
+    TransactionResponse
   }
 
   @country "gb"
@@ -37,7 +36,7 @@ defmodule GoCardless.HttpClient do
       |> Keyword.take([:secret_id, :secret_key])
       |> Map.new()
 
-    with {:ok, response} <- Tesla.post(client, "/token/new", request_body),
+    with {:ok, response} <- Tesla.post(client, "/token/new/", request_body),
          %Env{status: 200, body: response_body} <- response do
       {:ok, AccessTokenContainer.new(response_body)}
     end
@@ -46,7 +45,7 @@ defmodule GoCardless.HttpClient do
   def get_institutions(client) do
     with {:ok, response} <- Tesla.get(client, "/institutions/", query: [country: @country]),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, Enum.map(response_body, &Institution.new/1)}
+      {:ok, Enum.map(response_body, &InstitutionResponse.new/1)}
     end
   end
 
@@ -59,7 +58,7 @@ defmodule GoCardless.HttpClient do
 
     with {:ok, response} <- Tesla.post(client, "/agreements/enduser/", request_body),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, EndUserAgreement.new(response_body)}
+      {:ok, EndUserAgreementResponse.new(response_body)}
     end
   end
 
@@ -74,28 +73,28 @@ defmodule GoCardless.HttpClient do
 
     with {:ok, response} <- Tesla.post(client, "/requisitions/", request_body),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, Requisition.new(response_body)}
+      {:ok, RequisitionResponse.new(response_body)}
     end
   end
 
   def get_requisition(client, requisition_id) do
     with {:ok, response} <- Tesla.get(client, "/requisitions/#{requisition_id}"),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, Requisition.new(response_body)}
+      {:ok, RequisitionResponse.new(response_body)}
     end
   end
 
   def get_account_details(client, account_id) do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/details/"),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, Account.new(response_body)}
+      {:ok, AccountResponse.new(response_body)}
     end
   end
 
   def get_account_transactions(client, account_id) do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/transactions/"),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, Enum.map(response_body, &Transaction.new/1)}
+      {:ok, Enum.map(response_body, &TransactionResponse.new/1)}
     end
   end
 
@@ -103,7 +102,7 @@ defmodule GoCardless.HttpClient do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/transactions/"),
          %Env{status: 200, body: response_body} <- response,
          %{"balances" => balances} <- response_body do
-      {:ok, Enum.map(balances, &Balance.new/1)}
+      {:ok, Enum.map(balances, &BalanceResponse.new/1)}
     end
   end
 

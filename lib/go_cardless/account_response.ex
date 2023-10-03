@@ -1,4 +1,4 @@
-defmodule GoCardless.Account do
+defmodule GoCardless.AccountResponse do
   use Ecto.Schema
   import Ecto.Changeset
 

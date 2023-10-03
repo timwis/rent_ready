@@ -1,4 +1,4 @@
-defmodule GoCardless.Balance do
+defmodule GoCardless.BalanceResponse do
   use Ecto.Schema
   import Ecto.Changeset
 

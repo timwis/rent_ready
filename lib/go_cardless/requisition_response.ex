@@ -1,4 +1,4 @@
-defmodule GoCardless.Requisition do
+defmodule GoCardless.RequisitionResponse do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -17,6 +17,7 @@ defmodule GoCardless.Requisition do
   def new(attrs) do
     %__MODULE__{}
     |> cast(attrs, [
+      :id,
       :created,
       :redirect,
       :status,

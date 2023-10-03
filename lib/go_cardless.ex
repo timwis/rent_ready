@@ -1,53 +1,55 @@
 defmodule GoCardless do
   alias GoCardless.{
     AccessTokenContainer,
-    Account,
-    EndUserAgreement,
-    Institution,
-    Requisition,
-    Transaction
+    AccountResponse,
+    EndUserAgreementResponse,
+    InstitutionResponse,
+    RequisitionResponse,
+    TransactionResponse
   }
 
-  @implementation Application.compile_env(:rent_ready, :go_cardless_client, GoCardless.HttpClient)
-
   @callback new(opts :: []) :: Tesla.Client.t()
-  defdelegate new(opts \\ []), to: @implementation
+  def new(opts \\ []), do: impl().new(opts)
 
   @callback get_access_token(client :: Tesla.Client.t()) ::
               {:ok, access_token :: %AccessTokenContainer{}} | {:error, reasons :: String.t()}
-  defdelegate get_access_token(client), to: @implementation
+  def get_access_token(client), do: impl().get_access_token(client)
 
   @callback get_institutions(client :: Tesla.Client.t()) ::
-              {:ok, [%Institution{}]} | {:error, reason :: String.t()}
-  defdelegate get_institutions(client), to: @implementation
+              {:ok, [%InstitutionResponse{}]} | {:error, reason :: String.t()}
+  def get_institutions(client), do: impl().get_institutions(client)
 
   @callback create_end_user_agreement(
               client :: Tesla.Client.t(),
               institution_id :: String.t(),
               opts :: []
             ) ::
-              {:ok, %EndUserAgreement{}} | {:error, reason :: String.t()}
-  defdelegate create_end_user_agreement(client, institution_id, opts \\ []), to: @implementation
+              {:ok, %EndUserAgreementResponse{}} | {:error, reason :: String.t()}
+  def create_end_user_agreement(client, institution_id, opts \\ []),
+    do: impl().create_end_user_agreement(client, institution_id, opts)
 
   @callback create_requisition(
               client :: Tesla.Client.t(),
               institution_id :: String.t(),
               redirect :: String.t(),
               opts :: []
-            ) :: {:ok, %Requisition{}} | {:error, reason :: String.t()}
+            ) :: {:ok, %RequisitionResponse{}} | {:error, reason :: String.t()}
 
-  defdelegate create_requisition(client, institution_id, redirect, opts \\ []),
-    to: @implementation
+  def create_requisition(client, institution_id, redirect, opts \\ []),
+    do: impl().create_requisition(client, institution_id, redirect, opts)
 
   @callback get_requisition(client :: Tesla.Client.t(), requisition_id :: String.t()) ::
-              {:ok, %Requisition{}} | {:error, reason :: String.t()}
-  defdelegate get_requisition(client, requisition_id), to: @implementation
+              {:ok, %RequisitionResponse{}} | {:error, reason :: String.t()}
+  def get_requisition(client, requisition_id), do: impl().get_requisition(client, requisition_id)
 
   @callback get_account_details(client :: Tesla.Client.t(), account_id :: String.t()) ::
-              {:ok, %Account{}} | {:error, reason :: String.t()}
-  defdelegate get_account_details(client, account_id), to: @implementation
+              {:ok, %AccountResponse{}} | {:error, reason :: String.t()}
+  def get_account_details(client, account_id), do: impl().get_account_details(client, account_id)
 
   @callback get_account_transactions(client :: Tesla.Client.t(), account_id :: String.t()) ::
-              {:ok, [%Transaction{}]} | {:error, reason :: String.t()}
-  defdelegate get_account_transactions(client, account_id), to: @implementation
+              {:ok, [%TransactionResponse{}]} | {:error, reason :: String.t()}
+  def get_account_transactions(client, account_id),
+    do: impl().get_account_transactions(client, account_id)
+
+  defp impl(), do: Application.get_env(:rent_ready, :go_cardless_client, GoCardless.HttpClient)
 end
