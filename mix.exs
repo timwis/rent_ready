@@ -54,7 +54,10 @@ defmodule RentReady.MixProject do
       {:tesla, "~> 1.7"},
       {:hackney, "~> 1.18"},
       {:recase, "~> 0.5"},
-      {:money, "~> 1.12"}
+      {:money, "~> 1.12"},
+      {:cachex, "~> 3.6"},
+      {:mox, "~> 1.0", only: :test},
+      {:uuid, "~> 1.1"}
     ]
   end
 

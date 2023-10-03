@@ -16,6 +16,8 @@ defmodule RentReady.Application do
       {Phoenix.PubSub, name: RentReady.PubSub},
       # Start Finch
       {Finch, name: RentReady.Finch},
+      # Cachex
+      {Cachex, name: :banking_cache},
       # Start the Endpoint (http/https)
       RentReadyWeb.Endpoint
       # Start a worker by calling: RentReady.Worker.start_link(arg)
