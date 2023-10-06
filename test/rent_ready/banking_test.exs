@@ -60,10 +60,10 @@ defmodule RentReady.BankingTest do
     # test "soft deletes institutions no longer present in remote api" do end
   end
 
-  describe "build_requisition_link/1" do
+  describe "build_bank_connection_link/1" do
     setup [:stub_new, :stub_get_access_token, :seed_institution]
 
-    test "creates Agreement and Requisition in database", context do
+    test "creates BankConnection in the database", context do
       institution_id = context.institution.id
 
       MockGoCardless
@@ -77,39 +77,37 @@ defmodule RentReady.BankingTest do
       user = user_fixture()
 
       {:ok, _link} =
-        Banking.build_requisition_link(user, institution_id, "https://rentready.app/redirect")
+        Banking.build_bank_connection_link(user, institution_id, "https://rentready.app/redirect")
 
-      agreements = Banking.list_agreements(user)
+      bank_connections = Banking.list_bank_connections(user)
 
-      assert length(agreements) == 1
-      assert length(hd(agreements).banking_requisitions) == 1
+      assert length(bank_connections) == 1
     end
   end
 
-  describe "sync_requisition/1" do
+  describe "sync_bank_connection/1" do
     setup [
       :stub_new,
       :stub_get_access_token,
       :seed_institution,
       :seed_user,
-      :seed_agreement,
-      :seed_requisition
+      :seed_bank_connection
     ]
 
     test "updates status, but not link", context do
-      reference = context.requisition.reference
-      original_link_value = context.requisition.link
+      reference = context.bank_connection.reference
+      original_link_value = context.bank_connection.link
 
       MockGoCardless
       |> expect(:get_requisition, fn _, _ ->
         {:ok, requisition_response_fixture(status: "LN", link: "new link")}
       end)
 
-      {:ok, _updated_requisition} = Banking.sync_requisition(reference)
+      {:ok, _updated_bank_connection} = Banking.sync_bank_connection(reference)
 
-      requisition = Banking.get_requisition_by_reference!(reference)
-      assert requisition.status == :LN
-      assert requisition.link == original_link_value
+      bank_connection = Banking.get_bank_connection_by_reference!(reference)
+      assert bank_connection.status == :LN
+      assert bank_connection.link == original_link_value
     end
   end
 
@@ -131,14 +129,9 @@ defmodule RentReady.BankingTest do
     {:ok, user: user_fixture()}
   end
 
-  def seed_agreement(context) do
+  defp seed_bank_connection(context) do
     user = context.user
     institution_id = context.institution.id
-    {:ok, agreement: agreement_fixture(user, %{banking_institution_id: institution_id})}
-  end
-
-  defp seed_requisition(context) do
-    agreement = context.agreement
-    {:ok, requisition: requisition_fixture(agreement)}
+    {:ok, bank_connection: bank_connection_fixture(user, %{institution_id: institution_id})}
   end
 end

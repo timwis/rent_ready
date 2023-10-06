@@ -7,7 +7,7 @@ defmodule RentReady.Banking do
   alias RentReady.Repo
 
   alias GoCardless.{EndUserAgreementResponse, RequisitionResponse}
-  alias RentReady.Banking.{Agreement, Institution, Requisition}
+  alias RentReady.Banking.{BankConnection, Institution}
   alias RentReady.Accounts.User
 
   def list_institutions() do
@@ -53,88 +53,78 @@ defmodule RentReady.Banking do
     # in the remote source
   end
 
-  def build_requisition_link(user, institution_id, redirect_url) do
+  def build_bank_connection_link(user, institution_id, redirect_url) do
     access_token = get_access_token()
     client = GoCardless.new(access_token: access_token)
-    requisition_reference = UUID.uuid4()
+    connection_reference = UUID.uuid4()
 
-    with {:ok, remote_agreement} <-
+    with {:ok, agreement} <-
            GoCardless.create_end_user_agreement(
              client,
              institution_id,
              max_historical_days: 730,
              access_scope: ["transactions", "details"]
            ),
-         {:ok, local_agreement} <- create_agreement(user, remote_agreement),
-         {:ok, remote_requisition} <-
+         {:ok, requisition} <-
            GoCardless.create_requisition(
              client,
              institution_id,
              redirect_url,
-             agreement: remote_agreement.id,
-             reference: requisition_reference
+             agreement: agreement.id,
+             reference: connection_reference
            ),
-         {:ok, _local_requisition} <- create_requisition(local_agreement, remote_requisition) do
-      {:ok, remote_requisition.link}
+         {:ok, _bank_connection} <- create_bank_connection(user, agreement, requisition) do
+      {:ok, requisition.link}
     end
   end
 
-  def sync_requisition(reference) do
+  def sync_bank_connection(reference) do
     access_token = get_access_token()
     client = GoCardless.new(access_token: access_token)
 
-    with local_requisition <- get_requisition_by_reference!(reference),
-         {:ok, remote_requisition} <-
-           GoCardless.get_requisition(client, local_requisition.external_id),
-         {:ok, local_requisition} <-
-           update_requisition(local_requisition, remote_requisition) do
-      {:ok, local_requisition}
+    with bank_connection <- get_bank_connection_by_reference!(reference),
+         {:ok, requisition} <-
+           GoCardless.get_requisition(client, bank_connection.gc_requisition_id),
+         {:ok, bank_connection} <-
+           update_bank_connection(bank_connection, requisition) do
+      {:ok, bank_connection}
     end
   end
 
-  def list_agreements(%User{} = user) do
-    Repo.all(from a in Agreement, where: a.user_id == ^user.id)
-    |> Repo.preload(:banking_requisitions)
+  def list_bank_connections(%User{} = user) do
+    Repo.all(from a in BankConnection, where: a.user_id == ^user.id)
   end
 
-  def create_agreement(%User{} = user, %EndUserAgreementResponse{} = remote_agreement) do
-    attrs = Agreement.from_go_cardless(remote_agreement)
-    create_agreement(user, attrs)
+  def create_bank_connection(
+        %User{} = user,
+        %EndUserAgreementResponse{} = agreement,
+        %RequisitionResponse{} = requisition
+      ) do
+    attrs = BankConnection.from_go_cardless(agreement, requisition)
+    create_bank_connection(user, attrs)
   end
 
-  def create_agreement(%User{} = user, attrs) do
-    %Agreement{}
-    |> Agreement.changeset(attrs)
+  def create_bank_connection(%User{} = user, attrs) do
+    %BankConnection{}
+    |> BankConnection.create_changeset(attrs)
     |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert()
   end
 
-  def get_requisition_by_reference!(reference),
-    do: Repo.get_by!(Requisition, reference: reference)
+  def get_bank_connection_by_reference!(reference),
+    do: Repo.get_by!(BankConnection, reference: reference)
 
-  def create_requisition(%Agreement{} = agreement, %RequisitionResponse{} = remote_requisition) do
-    attrs = Requisition.from_go_cardless(remote_requisition)
-    create_requisition(agreement, attrs)
-  end
-
-  def create_requisition(%Agreement{} = agreement, attrs) do
-    %Requisition{}
-    |> Requisition.create_changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:banking_agreement, agreement)
-    |> Repo.insert()
-  end
-
-  def update_requisition(
-        %Requisition{} = requisition,
-        %RequisitionResponse{} = remote_requisition
+  def update_bank_connection(
+        %BankConnection{} = connection,
+        %RequisitionResponse{} = requisition
       ) do
-    attrs = Requisition.from_go_cardless(remote_requisition)
-    update_requisition(requisition, attrs)
+    attrs = BankConnection.from_go_cardless(requisition)
+    update_bank_connection(connection, attrs)
   end
 
-  def update_requisition(%Requisition{} = requisition, attrs) do
-    requisition
-    |> Requisition.update_changeset(attrs)
+  def update_bank_connection(%BankConnection{} = connection, attrs) do
+    connection
+    |> BankConnection.update_changeset(attrs)
     |> Repo.update()
   end
 

@@ -3,12 +3,11 @@ defmodule RentReady.Banking.Institution do
   import Ecto.Changeset
 
   @primary_key {:id, :string, autogenerate: false}
-  schema "banking_institutions" do
+  schema "institutions" do
     field :logo, :string
     field :name, :string
 
-    has_many :banking_agreements, RentReady.Banking.Agreement,
-      foreign_key: :banking_institution_id
+    has_many :bank_connections, RentReady.Banking.BankConnection, foreign_key: :institution_id
 
     timestamps()
   end

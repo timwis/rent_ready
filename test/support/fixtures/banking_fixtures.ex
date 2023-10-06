@@ -12,40 +12,30 @@ defmodule RentReady.BankingFixtures do
     institution
   end
 
-  def agreement_fixture(user, attrs \\ %{}) do
+  def bank_connection_fixture(user, attrs \\ %{}) do
     next_week = DateTime.add(DateTime.utc_now(), 7, :day)
 
-    banking_institution_id =
-      if Map.has_key?(attrs, :banking_institution_id) do
-        attrs.banking_institution_id
+    institution_id =
+      if Map.has_key?(attrs, :institution_id) do
+        attrs.institution_id
       else
         institution_fixture().id
       end
 
-    {:ok, agreement} =
+    {:ok, bank_connection} =
       attrs
       |> Enum.into(%{
-        external_id: UUID.uuid4(),
-        expires_at: next_week,
-        banking_institution_id: banking_institution_id
-      })
-      |> then(&RentReady.Banking.create_agreement(user, &1))
-
-    agreement
-  end
-
-  def requisition_fixture(agreement, attrs \\ %{}) do
-    {:ok, requisition} =
-      attrs
-      |> Enum.into(%{
-        external_id: UUID.uuid4(),
-        status: :CR,
+        institution_id: institution_id,
+        gc_agreement_id: UUID.uuid4(),
+        gc_requisition_id: UUID.uuid4(),
+        reference: UUID.uuid4(),
         link: "https://gocardless.rentready.app/start",
-        reference: UUID.uuid4()
+        status: :CR,
+        expires_at: next_week
       })
-      |> then(&RentReady.Banking.create_requisition(agreement, &1))
+      |> then(&RentReady.Banking.create_bank_connection(user, &1))
 
-    requisition
+    bank_connection
   end
 
   defp random_string, do: for(_ <- 1..10, into: "", do: <<Enum.random('0123456789abcdef')>>)
