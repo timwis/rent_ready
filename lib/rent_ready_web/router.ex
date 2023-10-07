@@ -68,6 +68,10 @@ defmodule RentReadyWeb.Router do
       on_mount: [{RentReadyWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      live "/bank_connections", BankConnectionLive.Index, :index
+      live "/bank_connections/new", BankConnectionLive.Index, :new
+      live "/bank_connections/authorised", BankConnectionLive.Index, :authorised
     end
   end
 

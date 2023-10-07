@@ -1,0 +1,42 @@
+<.header>
+  Listing Bank connections
+  <:actions>
+    <.link patch={~p"/bank_connections/new"}>
+      <.button>New Bank connection</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="bank_connections"
+  rows={@streams.bank_connections}
+  row_click={fn {_id, bank_connection} -> JS.navigate(~p"/bank_connections/#{bank_connection}") end}
+>
+  <:col :let={{_id, bank_connection}} label="Reference"><%= bank_connection.reference %></:col>
+  <:col :let={{_id, bank_connection}} label="Status"><%= bank_connection.status %></:col>
+  <:col :let={{_id, bank_connection}} label="Expires at"><%= bank_connection.expires_at %></:col>
+  <:action :let={{_id, bank_connection}}>
+    <div class="sr-only">
+      <.link navigate={~p"/bank_connections/#{bank_connection}"}>Show</.link>
+    </div>
+  </:action>
+  <:action :let={{id, bank_connection}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: bank_connection.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new]} id="bank_connection-modal" show on_cancel={JS.patch(~p"/bank_connections")}>
+  <.live_component
+    module={RentReadyWeb.BankConnectionLive.InstitutionPicker}
+    id={@bank_connection.id || :new}
+    title={@page_title}
+    action={@live_action}
+    bank_connection={@bank_connection}
+    patch={~p"/bank_connections"}
+  />
+</.modal>

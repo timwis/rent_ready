@@ -163,6 +163,10 @@ defmodule RentReady.Banking do
     |> Repo.update()
   end
 
+  def delete_bank_connection(%BankConnection{} = bank_connection) do
+    Repo.delete(bank_connection)
+  end
+
   defp get_access_token() do
     case Cachex.get(:banking_cache, "access_token") do
       {:ok, nil} ->
