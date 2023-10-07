@@ -60,7 +60,7 @@ defmodule RentReady.BankingTest do
     # test "soft deletes institutions no longer present in remote api" do end
   end
 
-  describe "build_bank_connection_link/1" do
+  describe "build_bank_connection_link/3" do
     setup [:stub_new, :stub_get_access_token, :seed_institution]
 
     test "creates BankConnection in the database", context do
@@ -79,7 +79,7 @@ defmodule RentReady.BankingTest do
       {:ok, _link} =
         Banking.build_bank_connection_link(user, institution_id, "https://rentready.app/redirect")
 
-      bank_connections = Banking.list_bank_connections(user)
+      bank_connections = Banking.list_user_bank_connections(user)
 
       assert length(bank_connections) == 1
     end
@@ -95,7 +95,8 @@ defmodule RentReady.BankingTest do
     ]
 
     test "updates status, but not link", context do
-      reference = context.bank_connection.reference
+      user = context.user
+      bank_connection = context.bank_connection
       original_link_value = context.bank_connection.link
 
       MockGoCardless
@@ -103,11 +104,46 @@ defmodule RentReady.BankingTest do
         {:ok, requisition_response_fixture(status: "LN", link: "new link")}
       end)
 
-      {:ok, _updated_bank_connection} = Banking.sync_bank_connection(reference)
+      {:ok, _updated_bank_connection} = Banking.sync_bank_connection(bank_connection)
 
-      bank_connection = Banking.get_bank_connection_by_reference!(reference)
+      bank_connection = Banking.get_user_bank_connection!(user, bank_connection.id)
       assert bank_connection.status == :LN
       assert bank_connection.link == original_link_value
+    end
+  end
+
+  describe "crud functions" do
+    setup [:seed_institution, :seed_user, :seed_bank_connection]
+
+    test "list_user_bank_connections/1 excludes other users' bank connections", context do
+      {:ok, user: user} = seed_user(context)
+      {:ok, bank_connection: user_bank_connection} = seed_bank_connection(%{context | user: user})
+
+      result = Banking.list_user_bank_connections(user)
+      assert length(result) == 1
+      assert hd(result).id == user_bank_connection.id
+    end
+
+    test "get_user_bank_connection!/2 and get_user_bank_connection_by!/2 both raise when accessing another user's bank connection",
+         context do
+      other_user_bank_connection = context.bank_connection
+      {:ok, user: user} = seed_user(context)
+      {:ok, bank_connection: user_bank_connection} = seed_bank_connection(%{context | user: user})
+
+      assert _bank_connection = Banking.get_user_bank_connection!(user, user_bank_connection.id)
+
+      assert _bank_connection =
+               Banking.get_user_bank_connection_by!(user,
+                 reference: user_bank_connection.reference
+               )
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Banking.get_user_bank_connection!(user, other_user_bank_connection.id)
+      end
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Banking.get_user_bank_connection_by!(user, reference: other_user_bank_connection.reference)
+      end
     end
   end
 

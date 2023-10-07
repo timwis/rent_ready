@@ -99,12 +99,11 @@ defmodule RentReady.Banking do
     end
   end
 
-  def sync_bank_connection(reference) do
+  def sync_bank_connection(%BankConnection{} = bank_connection) do
     access_token = get_access_token()
     client = GoCardless.new(access_token: access_token)
 
-    with bank_connection <- get_bank_connection_by_reference!(reference),
-         {:ok, requisition} <-
+    with {:ok, requisition} <-
            GoCardless.get_requisition(client, bank_connection.gc_requisition_id),
          {:ok, bank_connection} <-
            update_bank_connection(bank_connection, requisition) do
@@ -112,8 +111,26 @@ defmodule RentReady.Banking do
     end
   end
 
-  def list_bank_connections(%User{} = user) do
-    Repo.all(from a in BankConnection, where: a.user_id == ^user.id)
+  def list_user_bank_connections(%User{} = user) do
+    BankConnection
+    |> user_bank_connections_query(user)
+    |> Repo.all()
+  end
+
+  def get_user_bank_connection!(%User{} = user, id) do
+    BankConnection
+    |> user_bank_connections_query(user)
+    |> Repo.get!(id)
+  end
+
+  def get_user_bank_connection_by!(%User{} = user, clauses) do
+    BankConnection
+    |> user_bank_connections_query(user)
+    |> Repo.get_by!(clauses)
+  end
+
+  defp user_bank_connections_query(query, %User{id: user_id}) do
+    from(bc in query, where: bc.user_id == ^user_id)
   end
 
   def create_bank_connection(
@@ -131,9 +148,6 @@ defmodule RentReady.Banking do
     |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert()
   end
-
-  def get_bank_connection_by_reference!(reference),
-    do: Repo.get_by!(BankConnection, reference: reference)
 
   def update_bank_connection(
         %BankConnection{} = connection,
