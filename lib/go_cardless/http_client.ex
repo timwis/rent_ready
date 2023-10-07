@@ -57,7 +57,7 @@ defmodule GoCardless.HttpClient do
       |> Map.put(:institution_id, institution_id)
 
     with {:ok, response} <- Tesla.post(client, "/agreements/enduser/", request_body),
-         %Env{status: 200, body: response_body} <- response do
+         %Env{status: status, body: response_body} when status in 200..299 <- response do
       {:ok, EndUserAgreementResponse.new(response_body)}
     end
   end
@@ -72,13 +72,13 @@ defmodule GoCardless.HttpClient do
       |> Map.put(:redirect, redirect)
 
     with {:ok, response} <- Tesla.post(client, "/requisitions/", request_body),
-         %Env{status: 200, body: response_body} <- response do
+         %Env{status: status, body: response_body} when status in 200..299 <- response do
       {:ok, RequisitionResponse.new(response_body)}
     end
   end
 
   def get_requisition(client, requisition_id) do
-    with {:ok, response} <- Tesla.get(client, "/requisitions/#{requisition_id}"),
+    with {:ok, response} <- Tesla.get(client, "/requisitions/#{requisition_id}/"),
          %Env{status: 200, body: response_body} <- response do
       {:ok, RequisitionResponse.new(response_body)}
     end
