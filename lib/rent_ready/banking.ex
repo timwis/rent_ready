@@ -14,6 +14,8 @@ defmodule RentReady.Banking do
     Repo.all(Institution)
   end
 
+  def get_institution!(id), do: Repo.get(Institution, id)
+
   def create_institution(attrs) do
     %Institution{}
     |> Institution.changeset(attrs)
@@ -27,19 +29,19 @@ defmodule RentReady.Banking do
       GoCardless.new(access_token: access_token)
       |> GoCardless.get_institutions()
 
+    now =
+      NaiveDateTime.utc_now()
+      |> NaiveDateTime.truncate(:second)
+
     validated_institutions =
       Enum.map(fetched_institutions, fn institution ->
-        now =
-          NaiveDateTime.utc_now()
-          |> NaiveDateTime.truncate(:second)
-
-        Institution.changeset(%Institution{}, Map.from_struct(institution))
+        attrs = Institution.from_go_cardless(institution)
 
         %Institution{}
-        |> Institution.changeset(Map.from_struct(institution))
+        |> Institution.changeset(attrs)
         |> Ecto.Changeset.apply_action!(:validate)
         |> Map.from_struct()
-        |> Map.take([:id, :name, :logo])
+        |> Map.take([:id, :name, :logo, :transaction_days])
         |> Map.put(:inserted_at, now)
         |> Map.put(:updated_at, now)
       end)
@@ -58,11 +60,12 @@ defmodule RentReady.Banking do
     client = GoCardless.new(access_token: access_token)
     connection_reference = UUID.uuid4()
 
-    with {:ok, agreement} <-
+    with institution <- get_institution!(institution_id),
+         {:ok, agreement} <-
            GoCardless.create_end_user_agreement(
              client,
              institution_id,
-             max_historical_days: 730,
+             max_historical_days: institution.transaction_days || 90,
              access_scope: ["transactions", "details"]
            ),
          {:ok, requisition} <-
