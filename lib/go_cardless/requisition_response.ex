@@ -10,7 +10,7 @@ defmodule GoCardless.RequisitionResponse do
     field :institution_id, :string
     field :agreement, :string
     field :reference, :string
-    field :acccounts, {:array, :string}
+    field :accounts, {:array, :string}
     field :link, :string
   end
 

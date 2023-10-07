@@ -15,6 +15,7 @@ defmodule GoCardless.EndUserAgreementResponse do
   def new(attrs) do
     %__MODULE__{}
     |> cast(attrs, [
+      :id,
       :institution_id,
       :created,
       :max_historical_days,
