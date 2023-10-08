@@ -105,8 +105,13 @@ defmodule RentReady.Banking do
 
     with {:ok, requisition} <-
            GoCardless.get_requisition(client, bank_connection.gc_requisition_id),
+         accounts <-
+           Enum.map(requisition.accounts, fn account_id ->
+             {:ok, account} = GoCardless.get_account_details(client, account_id)
+             account
+           end),
          {:ok, bank_connection} <-
-           update_bank_connection(bank_connection, requisition) do
+           update_bank_connection(bank_connection, requisition, accounts) do
       {:ok, bank_connection}
     end
   end
@@ -115,18 +120,21 @@ defmodule RentReady.Banking do
     BankConnection
     |> user_bank_connections_query(user)
     |> Repo.all()
+    |> Repo.preload(:institution)
   end
 
   def get_user_bank_connection!(%User{} = user, id) do
     BankConnection
     |> user_bank_connections_query(user)
     |> Repo.get!(id)
+    |> Repo.preload([:institution, :bank_accounts])
   end
 
   def get_user_bank_connection_by!(%User{} = user, clauses) do
     BankConnection
     |> user_bank_connections_query(user)
     |> Repo.get_by!(clauses)
+    |> Repo.preload([:institution, :bank_accounts])
   end
 
   defp user_bank_connections_query(query, %User{id: user_id}) do
@@ -151,14 +159,16 @@ defmodule RentReady.Banking do
 
   def update_bank_connection(
         %BankConnection{} = connection,
-        %RequisitionResponse{} = requisition
+        %RequisitionResponse{} = requisition,
+        accounts
       ) do
-    attrs = BankConnection.from_go_cardless(requisition)
+    attrs = BankConnection.from_go_cardless(requisition, accounts)
     update_bank_connection(connection, attrs)
   end
 
   def update_bank_connection(%BankConnection{} = connection, attrs) do
     connection
+    |> Repo.preload(:bank_accounts)
     |> BankConnection.update_changeset(attrs)
     |> Repo.update()
   end

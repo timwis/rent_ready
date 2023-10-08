@@ -110,6 +110,30 @@ defmodule RentReady.BankingTest do
       assert bank_connection.status == :LN
       assert bank_connection.link == original_link_value
     end
+
+    test "fetches and creates associated bank_account records", %{
+      user: user,
+      bank_connection: bank_connection
+    } do
+      MockGoCardless
+      |> expect(:get_requisition, fn _, _ ->
+        {:ok,
+         requisition_response_fixture(
+           status: "LN",
+           link: "new link",
+           accounts: [UUID.uuid4(), UUID.uuid4()]
+         )}
+      end)
+      |> expect(:get_account_details, 2, fn _, account_id ->
+        {:ok, account_response_fixture(resource_id: account_id)}
+      end)
+
+      {:ok, _updated_bank_connection} = Banking.sync_bank_connection(bank_connection)
+
+      bank_connection = Banking.get_user_bank_connection!(user, bank_connection.id)
+      assert length(bank_connection.bank_accounts) == 2
+      assert hd(bank_connection.bank_accounts).name != nil
+    end
   end
 
   describe "crud functions" do

@@ -1,6 +1,7 @@
 defmodule GoCardless.Fixtures do
   alias GoCardless.{
     AccessTokenContainer,
+    AccountResponse,
     EndUserAgreementResponse,
     InstitutionResponse,
     RequisitionResponse
@@ -56,9 +57,24 @@ defmodule GoCardless.Fixtures do
       status: "CR",
       reference: UUID.uuid4(),
       agreement: UUID.uuid4(),
-      link: "https://gocardless.rentready.app/start"
+      link: "https://gocardless.rentready.app/start",
+      accounts: []
     })
     |> then(&struct(RequisitionResponse, &1))
+  end
+
+  def account_response_fixture(attrs \\ %{}) do
+    attrs
+    |> Enum.into(%{
+      resource_id: UUID.uuid4(),
+      iban: random_string(),
+      currency: "GBP",
+      owner_name: "John Doe",
+      name: "Bills",
+      cash_account_type: "CACC",
+      status: "enabled"
+    })
+    |> then(&struct(AccountResponse, &1))
   end
 
   defp random_string do

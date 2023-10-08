@@ -15,6 +15,8 @@ defmodule RentReady.Banking.BankConnection do
     field :status, Ecto.Enum, values: [:CR, :GC, :UA, :RJ, :SA, :GA, :LN, :SU, :EX]
     field :expires_at, :utc_datetime
 
+    has_many :bank_accounts, RentReady.Banking.BankAccount
+
     timestamps()
   end
 
@@ -44,6 +46,7 @@ defmodule RentReady.Banking.BankConnection do
   def update_changeset(connection, attrs) do
     connection
     |> cast(attrs, [:status])
+    |> cast_assoc(:bank_accounts, with: &RentReady.Banking.BankAccount.changeset/2)
     |> validate_required([:status])
   end
 
@@ -62,8 +65,11 @@ defmodule RentReady.Banking.BankConnection do
     }
   end
 
-  def from_go_cardless(%RequisitionResponse{} = requisition) do
-    %{status: requisition.status}
+  def from_go_cardless(%RequisitionResponse{} = requisition, accounts) do
+    %{
+      status: requisition.status,
+      bank_accounts: Enum.map(accounts, &RentReady.Banking.BankAccount.from_go_cardless/1)
+    }
   end
 
   defp expires_at(days_from_now) do

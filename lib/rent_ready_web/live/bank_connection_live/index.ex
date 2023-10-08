@@ -31,7 +31,7 @@ defmodule RentReadyWeb.BankConnectionLive.Index do
     user = socket.assigns.current_user
     bank_connection = Banking.get_user_bank_connection_by!(user, reference: reference)
     {:ok, _} = Banking.sync_bank_connection(bank_connection)
-    socket
+    redirect(socket, to: ~p"/bank_connections")
   end
 
   @impl true

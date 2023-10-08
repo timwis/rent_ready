@@ -18,6 +18,8 @@ defmodule RentReady.Application do
       {Finch, name: RentReady.Finch},
       # Cachex
       {Cachex, name: :banking_cache},
+      # Cloak
+      RentReady.Encrypted.Vault,
       # Start the Endpoint (http/https)
       RentReadyWeb.Endpoint
       # Start a worker by calling: RentReady.Worker.start_link(arg)

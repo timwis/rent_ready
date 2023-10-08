@@ -57,7 +57,8 @@ defmodule RentReady.MixProject do
       {:money, "~> 1.12"},
       {:cachex, "~> 3.6"},
       {:mox, "~> 1.0", only: :test},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:cloak_ecto, "~> 1.2.0"}
     ]
   end
 
