@@ -10,7 +10,7 @@ defmodule RentReady.Banking.Institution do
     field :name, :string
     field :transaction_days, :integer, default: 90
 
-    has_many :bank_connections, RentReady.Banking.BankConnection, foreign_key: :institution_id
+    has_many :bank_connections, RentReady.Banking.BankConnection
 
     timestamps()
   end
