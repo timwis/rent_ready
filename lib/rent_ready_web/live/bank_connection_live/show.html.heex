@@ -1,0 +1,21 @@
+<.header>
+  Bank connection <%= @bank_connection.id %>
+  <:subtitle>This is a bank_connection record from your database.</:subtitle>
+</.header>
+
+<.list>
+  <:item title="Institution"><%= @bank_connection.institution.name %></:item>
+  <:item title="Status"><%= @bank_connection.status %></:item>
+  <:item title="Connected at"><%= @bank_connection.inserted_at %></:item>
+  <:item title="Expires at"><%= @bank_connection.expires_at %></:item>
+</.list>
+
+<h2 class="text-md font-semibold leading-8 text-zinc-800 mt-11">Accounts</h2>
+
+<.table id="bank_accounts"
+  rows={@bank_connection.bank_accounts}>
+  <:col :let={bank_account} label="Name"><%= bank_account.name %></:col>
+  <:col :let={bank_account} label="Type"><%= bank_account.type %></:col>
+</.table>
+
+<.back navigate={~p"/bank_connections"}>Back to bank_connections</.back>

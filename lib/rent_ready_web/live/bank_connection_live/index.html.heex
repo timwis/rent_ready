@@ -12,8 +12,9 @@
   rows={@streams.bank_connections}
   row_click={fn {_id, bank_connection} -> JS.navigate(~p"/bank_connections/#{bank_connection}") end}
 >
-  <:col :let={{_id, bank_connection}} label="Reference"><%= bank_connection.reference %></:col>
+  <:col :let={{_id, bank_connection}} label="Institution"><%= bank_connection.institution.name %></:col>
   <:col :let={{_id, bank_connection}} label="Status"><%= bank_connection.status %></:col>
+  <:col :let={{_id, bank_connection}} label="Connected at"><%= bank_connection.inserted_at %></:col>
   <:col :let={{_id, bank_connection}} label="Expires at"><%= bank_connection.expires_at %></:col>
   <:action :let={{_id, bank_connection}}>
     <div class="sr-only">
