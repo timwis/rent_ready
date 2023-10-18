@@ -7,7 +7,8 @@ defmodule RentReady.Banking.BankAccount do
   schema "bank_accounts" do
     belongs_to :bank_connection, RentReady.Banking.BankConnection
 
-    field :gc_id, :string
+    field :gc_id, Ecto.UUID
+    field :gc_resource_id, RentReady.Encrypted.Binary, redact: true
     field :iban, RentReady.Encrypted.Binary, redact: true
     field :name, :string
 
@@ -15,6 +16,8 @@ defmodule RentReady.Banking.BankAccount do
     field :type, Ecto.Enum,
       values: [
         :CACC,
+        # amex
+        :CARD,
         :CASH,
         :CHAR,
         :CISH,
@@ -48,7 +51,8 @@ defmodule RentReady.Banking.BankAccount do
 
   def from_go_cardless(%AccountResponse{} = account_response) do
     %{
-      gc_id: account_response.resource_id,
+      gc_id: account_response.id,
+      gc_resource_id: account_response.resource_id,
       iban: account_response.iban,
       name: account_response.name,
       type: account_response.cash_account_type

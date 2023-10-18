@@ -2,8 +2,9 @@ defmodule GoCardless.AccountResponse do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:resource_id, :string, autogenerate: false}
+  @primary_key {:id, :string, autogenerate: false}
   embedded_schema do
+    field :resource_id, :string
     field :iban, :string
     field :currency, :string
     field :owner_name, :string
@@ -12,8 +13,8 @@ defmodule GoCardless.AccountResponse do
     field :status, :string
   end
 
-  def new(%{"resourceId" => _} = attrs) do
-    attrs
+  def new(%{"resourceId" => _} = camel_case_attrs) do
+    camel_case_attrs
     |> Recase.Enumerable.convert_keys(&Recase.to_snake/1)
     |> new()
   end
@@ -21,6 +22,7 @@ defmodule GoCardless.AccountResponse do
   def new(attrs) do
     %__MODULE__{}
     |> cast(attrs, [
+      :id,
       :resource_id,
       :iban,
       :currency,

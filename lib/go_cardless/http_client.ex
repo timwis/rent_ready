@@ -87,7 +87,8 @@ defmodule GoCardless.HttpClient do
   def get_account_details(client, account_id) do
     with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/details/"),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, AccountResponse.new(response_body["account"])}
+      attrs = Map.put(response_body["account"], "id", account_id)
+      {:ok, AccountResponse.new(attrs)}
     end
   end
 
