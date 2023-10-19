@@ -1,0 +1,18 @@
+<.header>
+  Bank account <%= @bank_account.name %>
+  <:subtitle><%= @bank_connection.institution.name %></:subtitle>
+</.header>
+
+<.async_result :let={transactions} assign={@transactions}>
+  <:loading>Fetching transactions...</:loading>
+  <:failed :let={reason}>There was an error fetching transactions</:failed>
+
+  <.table id="transactions"
+    rows={transactions}
+  >
+    <:col :let={transaction} label="Date"><%= transaction.booking_date %></:col>
+    <:col :let={transaction} label="Amount"><%= Money.to_string(transaction.transaction_amount) %></:col>
+    <:col :let={transaction} label="Payee"><%= transaction.creditor_name %></:col>
+    <:col :let={transaction} label="Note"><%= transaction.remittance_information_unstructured %></:col>
+  </.table>
+</.async_result>

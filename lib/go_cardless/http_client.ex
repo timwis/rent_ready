@@ -92,11 +92,27 @@ defmodule GoCardless.HttpClient do
     end
   end
 
-  def get_account_transactions(client, account_id) do
-    with {:ok, response} <- Tesla.get(client, "/accounts/#{account_id}/transactions/"),
+  def get_account_transactions(client, account_id, %Date{} = date_from, %Date{} = date_to) do
+    with {:ok, response} <-
+           Tesla.get(client, "/accounts/#{account_id}/transactions/",
+             query: [date_from: date_from, date_to: date_to]
+           ),
          %Env{status: 200, body: response_body} <- response do
-      {:ok, Enum.map(response_body, &TransactionResponse.new/1)}
+      flattened_transactions =
+        response_body["transactions"]
+        |> ungroup_by("status")
+        |> Enum.map(&TransactionResponse.new/1)
+
+      {:ok, flattened_transactions}
     end
+  end
+
+  # The API response groups transactions by status. This code
+  # flattens it and adds the status as a field to each transaction.
+  defp ungroup_by(list, key_name) do
+    Enum.reduce(list, [], fn {key_value, items}, accum ->
+      Enum.map(items, &Map.put(&1, key_name, key_value)) ++ accum
+    end)
   end
 
   def get_balances(client, account_id) do

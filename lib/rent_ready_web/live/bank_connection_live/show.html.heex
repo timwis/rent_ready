@@ -13,7 +13,9 @@
 <h2 class="text-md font-semibold leading-8 text-zinc-800 mt-11">Accounts</h2>
 
 <.table id="bank_accounts"
-  rows={@bank_connection.bank_accounts}>
+  rows={@bank_connection.bank_accounts}
+  row_click={fn bank_account -> JS.navigate(~p"/bank_accounts/#{bank_account}") end}
+>
   <:col :let={bank_account} label="Name"><%= bank_account.name %></:col>
   <:col :let={bank_account} label="Type"><%= bank_account.type %></:col>
 </.table>

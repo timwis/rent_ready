@@ -7,7 +7,7 @@ defmodule RentReady.Banking do
   alias RentReady.Repo
 
   alias GoCardless.{EndUserAgreementResponse, RequisitionResponse}
-  alias RentReady.Banking.{BankConnection, Institution}
+  alias RentReady.Banking.{BankAccount, BankConnection, Institution}
   alias RentReady.Accounts.User
 
   @include_sandbox_institution Application.compile_env(:rent_ready, :include_sandbox_institution)
@@ -175,6 +175,44 @@ defmodule RentReady.Banking do
 
   def delete_bank_connection(%BankConnection{} = bank_connection) do
     Repo.delete(bank_connection)
+  end
+
+  def get_user_bank_account!(%User{} = user, id) do
+    BankAccount
+    |> user_bank_accounts_query(user)
+    |> Repo.get!(id)
+    |> Repo.preload(bank_connection: :institution)
+  end
+
+  defp user_bank_accounts_query(query, %User{id: user_id}) do
+    from(a in query,
+      left_join: c in BankConnection,
+      on: c.id == a.bank_connection_id,
+      where: c.user_id == ^user_id
+    )
+  end
+
+  def create_bank_account(%BankConnection{} = bank_connection, attrs) do
+    %BankAccount{}
+    |> BankAccount.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:bank_connection, bank_connection)
+    |> Repo.insert()
+  end
+
+  def get_transactions(%BankAccount{} = bank_account, from, to) do
+    access_token = get_access_token()
+    client = GoCardless.new(access_token: access_token)
+
+    with {:ok, transactions} <- GoCardless.get_account_transactions(client, bank_account.gc_id, from, to) do
+      filtered_transactions = filter_relevant_transactions(transactions)
+      {:ok, filtered_transactions}
+    end
+  end
+
+  defp filter_relevant_transactions(transactions) do
+    Enum.filter(transactions, fn txn ->
+      txn.status == "booked" && Money.negative?(txn.transaction_amount)
+    end)
   end
 
   defp get_access_token() do

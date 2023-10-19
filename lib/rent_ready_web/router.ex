@@ -74,6 +74,8 @@ defmodule RentReadyWeb.Router do
       live "/bank_connections/authorised", BankConnectionLive.Index, :authorised
 
       live "/bank_connections/:id", BankConnectionLive.Show, :show
+
+      live "/bank_accounts/:id", BankAccountLive.Show, :show
     end
   end
 

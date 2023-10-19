@@ -136,6 +136,45 @@ defmodule RentReady.BankingTest do
     end
   end
 
+  describe "get_transactions/3" do
+    setup [
+      :stub_new,
+      :stub_get_access_token,
+      :seed_institution,
+      :seed_user,
+      :seed_bank_connection,
+      :seed_bank_account
+    ]
+
+    test "filters out income and non-booked transactions", context do
+      transaction_fixtures = [
+        transaction_response_fixture(
+          status: "booked",
+          transaction_amount: Money.new(-1000, :GBP)
+        ),
+        transaction_response_fixture(
+          status: "pending",
+          transaction_amount: Money.new(-2000, :GBP)
+        ),
+        transaction_response_fixture(
+          status: "booked",
+          transaction_amount: Money.new(500, :GBP)
+        )
+      ]
+
+      MockGoCardless
+      |> expect(:get_account_transactions, fn _, _, _, _ -> {:ok, transaction_fixtures} end)
+
+      bank_account = context.bank_account
+      to = Date.utc_today()
+      from = Date.add(to, -30)
+
+      assert {:ok, transactions} = Banking.get_transactions(bank_account, from, to)
+      assert length(transactions) == 1
+      assert Money.equals?(hd(transactions).transaction_amount, Money.new(-1000, :GBP))
+    end
+  end
+
   describe "crud functions" do
     setup [:seed_institution, :seed_user, :seed_bank_connection]
 
@@ -166,7 +205,9 @@ defmodule RentReady.BankingTest do
       end
 
       assert_raise Ecto.NoResultsError, fn ->
-        Banking.get_user_bank_connection_by!(user, reference: other_user_bank_connection.reference)
+        Banking.get_user_bank_connection_by!(user,
+          reference: other_user_bank_connection.reference
+        )
       end
     end
   end
@@ -193,5 +234,10 @@ defmodule RentReady.BankingTest do
     user = context.user
     institution_id = context.institution.id
     {:ok, bank_connection: bank_connection_fixture(user, %{institution_id: institution_id})}
+  end
+
+  defp seed_bank_account(context) do
+    bank_connection = context.bank_connection
+    {:ok, bank_account: bank_account_fixture(bank_connection)}
   end
 end

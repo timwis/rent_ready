@@ -46,10 +46,15 @@ defmodule GoCardless do
               {:ok, %AccountResponse{}} | {:error, reason :: String.t()}
   def get_account_details(client, account_id), do: impl().get_account_details(client, account_id)
 
-  @callback get_account_transactions(client :: Tesla.Client.t(), account_id :: String.t()) ::
+  @callback get_account_transactions(
+              client :: Tesla.Client.t(),
+              account_id :: String.t(),
+              date_from :: DateTime.t(),
+              date_to :: DateTime.t()
+            ) ::
               {:ok, [%TransactionResponse{}]} | {:error, reason :: String.t()}
-  def get_account_transactions(client, account_id),
-    do: impl().get_account_transactions(client, account_id)
+  def get_account_transactions(client, account_id, date_from, date_to),
+    do: impl().get_account_transactions(client, account_id, date_from, date_to)
 
   defp impl(), do: Application.get_env(:rent_ready, :go_cardless_client, GoCardless.HttpClient)
 end

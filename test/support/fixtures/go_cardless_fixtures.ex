@@ -4,7 +4,8 @@ defmodule GoCardless.Fixtures do
     AccountResponse,
     EndUserAgreementResponse,
     InstitutionResponse,
-    RequisitionResponse
+    RequisitionResponse,
+    TransactionResponse
   }
 
   def access_token_container_fixture(attrs \\ %{}) do
@@ -77,7 +78,23 @@ defmodule GoCardless.Fixtures do
     |> then(&struct(AccountResponse, &1))
   end
 
+  def transaction_response_fixture(attrs \\ %{}) do
+    attrs
+    |> Enum.into(%{
+      status: "booked",
+      booking_date: Date.utc_today(),
+      value_date: Date.utc_today(),
+      booking_date_time: DateTime.utc_now(),
+      value_date_time: DateTime.utc_now(),
+      transaction_amount: Money.new(-1000, :GBP),
+      debtor_name: "Acme Markets",
+      remittance_information_unstructured: "GROCERIES",
+      internal_transaction_id: random_string()
+    })
+    |> then(&struct(TransactionResponse, &1))
+  end
+
   defp random_string do
-    for _ <- 1..10, into: "", do: <<Enum.random('0123456789abcdef')>>
+    for _ <- 1..10, into: "", do: <<Enum.random(~c"0123456789abcdef")>>
   end
 end
