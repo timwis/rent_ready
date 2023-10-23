@@ -11,8 +11,6 @@ defmodule RentReady.Banking do
   alias RentReady.RowSelection
   alias RentReady.Accounts.User
 
-  @include_sandbox_institution Application.compile_env(:rent_ready, :include_sandbox_institution)
-
   def list_institutions() do
     Repo.all(Institution)
   end
@@ -48,22 +46,6 @@ defmodule RentReady.Banking do
         |> Map.put(:inserted_at, now)
         |> Map.put(:updated_at, now)
       end)
-
-    validated_institutions =
-      if @include_sandbox_institution do
-        [
-          %{
-            id: "SANDBOXFINANCE_SFIN0000",
-            name: "Sandbox Finance",
-            logo: "https://cdn.nordigen.com/ais/SANDBOXFINANCE_SFIN0000.png",
-            inserted_at: now,
-            updated_at: now
-          }
-          | validated_institutions
-        ]
-      else
-        validated_institutions
-      end
 
     Repo.insert_all(Institution, validated_institutions,
       on_conflict: {:replace, [:name, :logo, :updated_at]},
