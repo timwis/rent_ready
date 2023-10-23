@@ -45,6 +45,7 @@ defmodule RentReady.BankingFixtures do
         gc_id: UUID.uuid4(),
         gc_resource_id: random_string(),
         iban: random_string(),
+        owner_name: "John Doe",
         name: "Main",
         type: :CACC
       })
@@ -53,5 +54,5 @@ defmodule RentReady.BankingFixtures do
     bank_account
   end
 
-  defp random_string, do: for(_ <- 1..10, into: "", do: <<Enum.random('0123456789abcdef')>>)
+  defp random_string, do: for(_ <- 1..10, into: "", do: <<Enum.random(~c"0123456789abcdef")>>)
 end
