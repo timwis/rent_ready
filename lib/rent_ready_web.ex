@@ -86,6 +86,7 @@ defmodule RentReadyWeb do
       # Core UI components and translation
       import RentReadyWeb.CoreComponents
       import RentReadyWeb.Gettext
+      import RentReadyWeb.CustomComponents
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

@@ -8,6 +8,7 @@ defmodule RentReady.Banking do
 
   alias GoCardless.{EndUserAgreementResponse, RequisitionResponse}
   alias RentReady.Banking.{BankAccount, BankConnection, Institution}
+  alias RentReady.RowSelection
   alias RentReady.Accounts.User
 
   @include_sandbox_institution Application.compile_env(:rent_ready, :include_sandbox_institution)
@@ -203,10 +204,15 @@ defmodule RentReady.Banking do
     access_token = get_access_token()
     client = GoCardless.new(access_token: access_token)
 
-    with {:ok, transactions} <- GoCardless.get_account_transactions(client, bank_account.gc_id, from, to) do
+    with {:ok, transactions} <-
+           GoCardless.get_account_transactions(client, bank_account.gc_id, from, to) do
       filtered_transactions = filter_relevant_transactions(transactions)
       {:ok, filtered_transactions}
     end
+  end
+
+  def change_transaction_selection(%RowSelection{} = row_selection, attrs \\ %{}) do
+    RowSelection.changeset(row_selection, attrs)
   end
 
   defp filter_relevant_transactions(transactions) do

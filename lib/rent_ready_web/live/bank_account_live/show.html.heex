@@ -5,14 +5,23 @@
 
 <.async_result :let={transactions} assign={@transactions}>
   <:loading>Fetching transactions...</:loading>
-  <:failed :let={reason}>There was an error fetching transactions</:failed>
+  <:failed>There was an error fetching transactions</:failed>
 
-  <.table id="transactions"
-    rows={transactions}
-  >
-    <:col :let={transaction} label="Date"><%= transaction.booking_date %></:col>
-    <:col :let={transaction} label="Amount"><%= Money.to_string(transaction.transaction_amount) %></:col>
-    <:col :let={transaction} label="Payee"><%= transaction.creditor_name %></:col>
-    <:col :let={transaction} label="Note"><%= transaction.remittance_information_unstructured %></:col>
-  </.table>
+  <.form for={@changeset} phx-submit="submit_transactions">
+    <.transactions_table id="transactions"
+      rows={transactions}
+      row_id={&(&1.id)}
+    >
+      <:col :let={transaction} label="Date">
+        <%= transaction.booking_date %>
+        <.stack>
+          <:item title="Payee"><%= transaction.creditor_name %></:item>
+          <:item title="Note"><%= transaction.remittance_information_unstructured %></:item>
+        </.stack>
+      </:col>
+      <:col :let={transaction} label="Amount"><%= Money.to_string(transaction.transaction_amount) %></:col>
+      <:col :let={transaction} label="Payee" stacked><%= transaction.creditor_name %></:col>
+      <:col :let={transaction} label="Note" stacked><%= transaction.remittance_information_unstructured %></:col>
+    </.transactions_table>
+  </.form>
 </.async_result>

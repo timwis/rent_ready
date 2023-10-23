@@ -30,6 +30,7 @@ defmodule GoCardless.TransactionResponse do
   def new(attrs) do
     %__MODULE__{}
     |> cast(attrs, [
+      :id,
       :status,
       :booking_date,
       :value_date,
