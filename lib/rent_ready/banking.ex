@@ -12,7 +12,7 @@ defmodule RentReady.Banking do
   alias RentReady.Accounts.User
 
   def list_institutions() do
-    Repo.all(Institution)
+    Repo.all(from(i in Institution, order_by: [asc: i.name]))
   end
 
   def get_institution!(id), do: Repo.get(Institution, id)
