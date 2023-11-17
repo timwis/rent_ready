@@ -175,6 +175,44 @@ defmodule RentReady.BankingTest do
     end
   end
 
+  describe "list_user_transactions/1" do
+    setup [
+      :stub_new,
+      :stub_get_access_token,
+      :seed_institution,
+      :seed_user,
+      :seed_bank_connection,
+      :seed_bank_account
+    ]
+
+    test "lists transactions across user's bank accounts", context do
+      transaction_fixture(context.bank_account)
+
+      _other_bank_account_transaction =
+        bank_account_fixture(context.bank_connection)
+        |> transaction_fixture()
+
+      transactions = Banking.list_user_transactions(context.user)
+
+      assert length(transactions) == 2
+    end
+
+    test "excludes transactions belonging to other users", context do
+      expected_transaction = transaction_fixture(context.bank_account)
+
+      _other_users_transaction =
+        user_fixture()
+        |> bank_connection_fixture()
+        |> bank_account_fixture()
+        |> transaction_fixture()
+
+      transactions = Banking.list_user_transactions(context.user)
+
+      assert length(transactions) == 1
+      assert hd(transactions).id == expected_transaction.id
+    end
+  end
+
   describe "crud functions" do
     setup [:seed_institution, :seed_user, :seed_bank_connection]
 

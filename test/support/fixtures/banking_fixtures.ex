@@ -54,5 +54,20 @@ defmodule RentReady.BankingFixtures do
     bank_account
   end
 
+  def transaction_fixture(bank_account, attrs \\ %{}) do
+    {:ok, transaction} =
+      attrs
+      |> Enum.into(%{
+        gc_id: UUID.uuid4(),
+        booked_at: Date.utc_today(),
+        type: :payment,
+        amount: Money.new(-1000, :GBP),
+        raw_data: %{}
+      })
+      |> then(&RentReady.Banking.create_transaction(bank_account, &1))
+
+    transaction
+  end
+
   defp random_string, do: for(_ <- 1..10, into: "", do: <<Enum.random(~c"0123456789abcdef")>>)
 end

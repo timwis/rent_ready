@@ -7,7 +7,7 @@ defmodule RentReady.Banking do
   alias RentReady.Repo
 
   alias GoCardless.{EndUserAgreementResponse, RequisitionResponse}
-  alias RentReady.Banking.{BankAccount, BankConnection, Institution}
+  alias RentReady.Banking.{BankAccount, BankConnection, Institution, Transaction}
   alias RentReady.RowSelection
   alias RentReady.Accounts.User
 
@@ -191,6 +191,24 @@ defmodule RentReady.Banking do
       filtered_transactions = filter_relevant_transactions(transactions)
       {:ok, filtered_transactions}
     end
+  end
+
+  def list_user_transactions(%User{} = user) do
+    from(t in Transaction,
+      left_join: a in BankAccount,
+      on: t.bank_account_id == a.id,
+      left_join: c in BankConnection,
+      on: a.bank_connection_id == c.id,
+      where: c.user_id == ^user.id
+    )
+    |> Repo.all()
+  end
+
+  def create_transaction(%BankAccount{} = bank_account, attrs) do
+    %Transaction{}
+    |> Transaction.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:bank_account, bank_account)
+    |> Repo.insert()
   end
 
   def change_transaction_selection(
