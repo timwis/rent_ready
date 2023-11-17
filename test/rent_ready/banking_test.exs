@@ -213,6 +213,83 @@ defmodule RentReady.BankingTest do
     end
   end
 
+  describe "fetch_and_save_remote_transactions/4" do
+    setup [
+      :stub_new,
+      :stub_get_access_token,
+      :seed_institution,
+      :seed_user,
+      :seed_bank_connection,
+      :seed_bank_account
+    ]
+
+    test "fetches and saves transactions", context do
+      transaction_fixtures = repeat(&transaction_response_fixture/0, 5)
+
+      MockGoCardless
+      |> expect(:get_account_transactions, fn _, _, _, _ -> {:ok, transaction_fixtures} end)
+
+      bank_account = context.bank_account
+      to = Date.utc_today()
+      from = Date.add(to, -30)
+
+      transaction_ids =
+        transaction_fixtures
+        |> Enum.take_random(2)
+        |> Enum.map(& &1.internal_transaction_id)
+
+      assert {:ok, _operations} =
+               Banking.fetch_and_save_remote_transactions(bank_account, from, to, transaction_ids)
+
+      transactions = Banking.list_user_transactions(context.user)
+      assert length(transactions) == 2
+    end
+
+    test "returns error if a transaction id is not found in new fetch", context do
+      transaction_fixtures = repeat(&transaction_response_fixture/0, 5)
+
+      MockGoCardless
+      |> expect(:get_account_transactions, fn _, _, _, _ -> {:ok, transaction_fixtures} end)
+
+      bank_account = context.bank_account
+      to = Date.utc_today()
+      from = Date.add(to, -30)
+
+      transaction_ids =
+        transaction_fixtures
+        |> Enum.take_random(2)
+        |> Enum.map(& &1.internal_transaction_id)
+        |> List.insert_at(-1, "unknown_id")
+
+      assert {:error, {:not_found, "unknown_id"}} =
+               Banking.fetch_and_save_remote_transactions(bank_account, from, to, transaction_ids)
+    end
+
+    test "returns error if a transaction is already saved", context do
+      transaction_fixtures = repeat(&transaction_response_fixture/0, 5)
+
+      MockGoCardless
+      |> expect(:get_account_transactions, 2, fn _, _, _, _ -> {:ok, transaction_fixtures} end)
+
+      bank_account = context.bank_account
+      to = Date.utc_today()
+      from = Date.add(to, -30)
+
+      transaction_ids = Enum.map(transaction_fixtures, & &1.internal_transaction_id)
+
+      already_saved_txn_id = Enum.at(transaction_ids, 1)
+      Banking.fetch_and_save_remote_transactions(bank_account, from, to, [already_saved_txn_id])
+
+      assert {:error, {:transaction, already_saved_txn_id}, %Ecto.Changeset{}, _changes_so_far} =
+        Banking.fetch_and_save_remote_transactions(bank_account, from, to, transaction_ids)
+    end
+
+    # Either because too many transaction ids are provided in the request, or
+    # because the new ids, in combination with the existing saves, are too many
+    @tag :skip
+    test "returns error if user transaction save count is exceeded"
+  end
+
   describe "crud functions" do
     setup [:seed_institution, :seed_user, :seed_bank_connection]
 
@@ -278,4 +355,6 @@ defmodule RentReady.BankingTest do
     bank_connection = context.bank_connection
     {:ok, bank_account: bank_account_fixture(bank_connection)}
   end
+
+  defp repeat(fun, times), do: Enum.map(1..times, fn _ -> fun.() end)
 end

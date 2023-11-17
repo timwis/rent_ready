@@ -67,7 +67,8 @@ defmodule GoCardless.Fixtures do
   def account_response_fixture(attrs \\ %{}) do
     attrs
     |> Enum.into(%{
-      resource_id: UUID.uuid4(),
+      id: UUID.uuid4(),
+      resource_id: random_string(),
       iban: random_string(),
       currency: "GBP",
       owner_name: "John Doe",
@@ -81,6 +82,7 @@ defmodule GoCardless.Fixtures do
   def transaction_response_fixture(attrs \\ %{}) do
     attrs
     |> Enum.into(%{
+      id: random_string(),
       status: "booked",
       booking_date: Date.utc_today(),
       value_date: Date.utc_today(),

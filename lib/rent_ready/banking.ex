@@ -4,6 +4,7 @@ defmodule RentReady.Banking do
   """
 
   import Ecto.Query, warn: false
+  alias Ecto.Multi
   alias RentReady.Repo
 
   alias GoCardless.{EndUserAgreementResponse, RequisitionResponse}
@@ -190,6 +191,42 @@ defmodule RentReady.Banking do
            GoCardless.get_account_transactions(client, bank_account.gc_id, from, to) do
       filtered_transactions = filter_relevant_transactions(transactions)
       {:ok, filtered_transactions}
+    end
+  end
+
+  # TODO: validate max length of transaction_ids list, combined with number of already
+  # saved transactions
+  def fetch_and_save_remote_transactions(
+        %BankAccount{} = bank_account,
+        from,
+        to,
+        remote_transaction_ids
+      )
+      when is_list(remote_transaction_ids) do
+    {:ok, remote_transactions} = fetch_remote_transactions(bank_account, from, to)
+
+    operations =
+      remote_transactions
+      |> Enum.filter(fn txn -> txn.internal_transaction_id in remote_transaction_ids end)
+      |> Enum.reduce(Multi.new(), fn txn, multi ->
+        attrs = Transaction.from_go_cardless(txn)
+
+        changeset =
+          %Transaction{}
+          |> Transaction.changeset(attrs)
+          |> Ecto.Changeset.put_assoc(:bank_account, bank_account)
+
+        Multi.insert(
+          multi,
+          {:transaction, Ecto.Changeset.get_field(changeset, :gc_id)},
+          changeset
+        )
+      end)
+
+    operations_list = Multi.to_list(operations)
+    case Enum.find(remote_transaction_ids, fn id -> !List.keymember?(operations_list, {:transaction, id}, 0) end) do
+      nil -> Repo.transaction(operations)
+      unmatched_id -> {:error, {:not_found, unmatched_id}}
     end
   end
 

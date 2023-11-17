@@ -3,13 +3,14 @@ defmodule GoCardless.TransactionResponse do
   import Ecto.Changeset
 
   @primary_key {:id, :string, autogenerate: false}
+  @derive [{Jason.Encoder, except: [:transaction_amount]}]
   embedded_schema do
     field :status, :string
     field :booking_date, :date
     field :value_date, :date
     field :booking_date_time, :utc_datetime
     field :value_date_time, :utc_datetime
-    field :transaction_amount, Money.Ecto.Composite.Type
+    field :transaction_amount, Money.Ecto.Map.Type
     field :debtor_name, :string
     field :creditor_name, :string
     field :remittance_information_unstructured, :string
