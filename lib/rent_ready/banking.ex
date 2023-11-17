@@ -182,7 +182,7 @@ defmodule RentReady.Banking do
     |> Repo.insert()
   end
 
-  def get_transactions(%BankAccount{} = bank_account, from, to) do
+  def fetch_remote_transactions(%BankAccount{} = bank_account, from, to) do
     access_token = get_access_token()
     client = GoCardless.new(access_token: access_token)
 

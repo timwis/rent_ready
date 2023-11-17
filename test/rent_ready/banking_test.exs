@@ -136,7 +136,7 @@ defmodule RentReady.BankingTest do
     end
   end
 
-  describe "get_transactions/3" do
+  describe "fetch_remote_transactions/3" do
     setup [
       :stub_new,
       :stub_get_access_token,
@@ -169,7 +169,7 @@ defmodule RentReady.BankingTest do
       to = Date.utc_today()
       from = Date.add(to, -30)
 
-      assert {:ok, transactions} = Banking.get_transactions(bank_account, from, to)
+      assert {:ok, transactions} = Banking.fetch_remote_transactions(bank_account, from, to)
       assert length(transactions) == 1
       assert Money.equals?(hd(transactions).transaction_amount, Money.new(-1000, :GBP))
     end
