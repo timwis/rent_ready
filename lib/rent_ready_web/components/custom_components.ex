@@ -80,9 +80,8 @@ defmodule RentReadyWeb.CustomComponents do
             :for={row <- @rows}
             id={@row_id && @row_id.(row)}
             x-data={@row_id && "{ id: '#{@row_id.(row)}' }"}
-            class="group hover:bg-zinc-50 hover:cursor-pointer"
+            class="group hover:bg-zinc-50"
             x-bind:class="selected_rows.includes(id) && 'bg-gray-50'"
-            x-on:click="toggle(id)"
           >
             <td class="relative px-7 sm:w-12 sm:px-6">
               <div
@@ -100,8 +99,9 @@ defmodule RentReadyWeb.CustomComponents do
             </td>
             <td
               :for={{col, i} <- Enum.with_index(@col)}
+              x-on:click="toggle(id)"
               class={[
-                "relative p-0",
+                "relative p-0 hover:cursor-pointer",
                 col[:stacked] && "hidden lg:table-cell"
               ]}
             >
