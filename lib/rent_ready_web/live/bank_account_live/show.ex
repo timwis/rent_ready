@@ -2,7 +2,6 @@ defmodule RentReadyWeb.BankAccountLive.Show do
   use RentReadyWeb, :live_view
 
   alias RentReady.Banking
-  alias RentReady.RowSelection
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -17,12 +16,12 @@ defmodule RentReadyWeb.BankAccountLive.Show do
      |> assign(:page_title, "Show Bank account")
      |> assign(:bank_connection, bank_account.bank_connection)
      |> assign(:bank_account, bank_account)
-     |> assign(:changeset, Banking.change_transaction_selection(%RowSelection{}))
      |> assign_async(:transactions, fn ->
        case Banking.get_transactions(bank_account, from, to) do
          {:ok, transactions} -> {:ok, %{transactions: transactions}}
          {:error, reason} -> {:error, reason}
        end
+     |> assign(:changeset, Banking.change_transaction_selection())
      end)}
   end
 

@@ -193,7 +193,10 @@ defmodule RentReady.Banking do
     end
   end
 
-  def change_transaction_selection(%RowSelection{} = row_selection, attrs \\ %{}) do
+  def change_transaction_selection(
+        %RowSelection{} = row_selection \\ %RowSelection{},
+        attrs \\ %{}
+      ) do
     RowSelection.changeset(row_selection, attrs)
   end
 
