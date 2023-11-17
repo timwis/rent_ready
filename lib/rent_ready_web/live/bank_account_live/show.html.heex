@@ -3,25 +3,25 @@
   <:subtitle><%= @bank_connection.institution.name %></:subtitle>
 </.header>
 
-<.async_result :let={transactions} assign={@transactions}>
+<.async_result assign={@transactions_status}>
   <:loading>Fetching transactions...</:loading>
   <:failed>There was an error fetching transactions</:failed>
 
   <.form for={@changeset} phx-submit="submit_transactions">
     <.transactions_table id="transactions"
-      rows={transactions}
-      row_id={&(&1.id)}
+      rows={@streams.transactions}
+      row_id={fn {_id, transaction} -> transaction.internal_transaction_id || transaction.id end}
     >
-      <:col :let={transaction} label="Date">
+      <:col :let={{_id, transaction}} label="Date">
         <%= transaction.booking_date %>
         <.stack>
           <:item title="Payee"><%= transaction.creditor_name %></:item>
           <:item title="Note"><%= transaction.remittance_information_unstructured %></:item>
         </.stack>
       </:col>
-      <:col :let={transaction} label="Amount"><%= Money.to_string(transaction.transaction_amount) %></:col>
-      <:col :let={transaction} label="Payee" stacked><%= transaction.creditor_name %></:col>
-      <:col :let={transaction} label="Note" stacked><%= transaction.remittance_information_unstructured %></:col>
+      <:col :let={{_id, transaction}} label="Amount"><%= Money.to_string(transaction.transaction_amount) %></:col>
+      <:col :let={{_id, transaction}} label="Payee" stacked><%= transaction.creditor_name %></:col>
+      <:col :let={{_id, transaction}} label="Note" stacked><%= transaction.remittance_information_unstructured %></:col>
     </.transactions_table>
   </.form>
 </.async_result>
